@@ -1,11 +1,8 @@
-from flask import Flask
 import logging
 
-from kafka import KafkaConsumer
-from transformers import pipeline
+from flask import Flask
 from pymongo import MongoClient
-import json
-import threading
+from transformers import pipeline
 
 # APP
 # configmap and environment vars
