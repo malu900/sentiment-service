@@ -19,14 +19,11 @@ db = cluster["sentiment"]
 collection = db["sentiment"]
 # PIPELINE
 sentiment_pipeline = pipeline("sentiment-analysis")
-data = ["I love you. I hate you."]
-sentiment_pipeline(data)
+# data = ["I love you. I hate you."]
+# sentiment_pipeline(data)
 istrue = True
 # KAFKA
-from kafka import KafkaConsumer, TopicPartition
-
-# consumer.subscribe(topics=['sentimentPython'])
-# consumer.subscription()
+from kafka import KafkaConsumer
 
 consumer = KafkaConsumer(
     'sentimentPython',
@@ -40,37 +37,24 @@ consumer = KafkaConsumer(
 )
 
 
+def predictSentiment(msg):
+    return sentiment_pipeline(msg)
+
+
 @app.route('/hola')
 def hello_world():  # put application's code here
     collection.insert_one({"sentiment": "TEST MESSAGE"})
+
     return "TEST"
 
 
 if __name__ == '__main__':
-    # listen_kill_server()
     while True:
         for message in consumer:
-            print(".....ongoing transaction")
             collection.insert_one({"sentiment": message.value.decode()})
-            # json.loads(message.value.decode())
-    app.run(host="0.0.0.0", port=8083, debug=True)
-    # while istrue:
-    #     run()
-    # consumer = Consumer()
-    # To consume from fintechexplained-topic
-    # print(consumer.topics())
-    # for message in consumer:
-    #     collection.insert_one({"sentiment": "TEST MESSAGE"})
-    #     print(message.topic)
-    #     print(message.partition)
-    #     print(message.offset)
-    #     print(message.key)
-    #     print(consumer.topics())
+            pred = predictSentiment(message.value.decode())
+            predict = pred[0]["label"]
+            collection.insert_one({"sentiment": predict})
+            # collection.insert_one({"sentiment": pred[0].label})
 
-    #     # consumer.poll()
-    #     # consumer.seek_to_end()
-    #     for message in consumer:
-    #         message = message.value
-    #         print(message.value)
-    #         collection.insert_one({"message": message})
-    #         print('{} added to {}'.format(message, collection))
+    app.run(host="0.0.0.0", port=8083, debug=True)
