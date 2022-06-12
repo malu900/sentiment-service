@@ -3,6 +3,7 @@ import logging
 from flask import Flask
 from pymongo import MongoClient
 from transformers import pipeline
+import json
 
 # APP
 # configmap and environment vars
@@ -23,12 +24,13 @@ istrue = True
 from kafka import KafkaConsumer
 
 consumer = KafkaConsumer(
-    'sentimentPython',
+    'sentimentObjectPython',
     bootstrap_servers=['kafka.kafka.svc.cluster.local:9092'],
     auto_offset_reset='earliest',
     enable_auto_commit=True,
     fetch_max_wait_ms=0,
-    group_id="My_python_group",
+    group_id="My_python_group2",
+    value_deserializer=lambda m: json.loads(m.decode('utf-8')),
     max_poll_interval_ms=5000,
     max_poll_records=1
 )
@@ -48,8 +50,10 @@ def hello_world():  # put application's code here
 if __name__ == '__main__':
     while True:
         for message in consumer:
-            pred = predictSentiment(message.value.decode())
-            predict = pred[0]["label"]
-            collection.insert_one({"sentiment": predict})
+            # msg = message.value.decode()
+            msg = message.value
+            # pred = predictSentiment(message.value.decode())
+            # predict = pred[0]["label"]
+            collection.insert_one({"sentiment": msg})
 
     app.run(host="0.0.0.0", port=8083, debug=True)
