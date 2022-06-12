@@ -56,9 +56,11 @@ if __name__ == '__main__':
             # collection.insert_one({"sentiment": msg})
             pred = predictSentiment(first_value)
             predict = pred[0]["label"]
-            collection.insert_one({"sentiment": predict})
+            test = collection.insert_one({"sentiment": predict})
+            idd = str(test.inserted_id)
+            collection.insert_one({"sentiment": idd})
 
             producer = KafkaProducer(bootstrap_servers='kafka.kafka.svc.cluster.local:9092',value_serializer=lambda v: json.dumps(v).encode('utf-8'))
-            producer.send('sentimentTopicSpring', predict)
+            producer.send('sentimentTopicSpringReturnTwo', {"id": msg["id"], "sentiment": predict, "sentimentId": idd})
 
     app.run(host="0.0.0.0", port=8083, debug=True)
