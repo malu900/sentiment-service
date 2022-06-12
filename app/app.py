@@ -4,7 +4,7 @@ from flask import Flask
 from pymongo import MongoClient
 from transformers import pipeline
 import json
-
+from kafka import KafkaConsumer, KafkaProducer, admin
 # APP
 # configmap and environment vars
 # https://www.magalix.com/blog/the-configmap-pattern
@@ -17,11 +17,16 @@ db = cluster["sentiment"]
 collection = db["sentiment"]
 # PIPELINE
 sentiment_pipeline = pipeline("sentiment-analysis")
+# admin_client = admin.KafkaAdminClient(
+#     bootstrap_servers="kafka.kafka.svc.cluster.local:9092",
+#     client_id='test'
+# )
+# topic_list = []
+# topic_list.append(admin.NewTopic(name="sentimentTopicSpring", num_partitions=1, replication_factor=1))
+# admin_client.create_topics(new_topics=topic_list, validate_only=False)
 # data = ["I love you. I hate you."]
 # sentiment_pipeline(data)
-istrue = True
 # KAFKA
-from kafka import KafkaConsumer
 
 consumer = KafkaConsumer(
     'sentimentObjectPython',
@@ -52,8 +57,18 @@ if __name__ == '__main__':
         for message in consumer:
             # msg = message.value.decode()
             msg = message.value
-            # pred = predictSentiment(message.value.decode())
+
             # predict = pred[0]["label"]
-            collection.insert_one({"sentiment": msg})
+            values_view = msg.values()
+            value_iterator = iter(values_view)
+            first_value = next(value_iterator)
+
+            # collection.insert_one({"sentiment": msg})
+            pred = predictSentiment(first_value)
+            predict = pred[0]["label"]
+            collection.insert_one({"sentiment": predict})
+
+            producer = KafkaProducer(bootstrap_servers='kafka.kafka.svc.cluster.local:9092',value_serializer=lambda v: json.dumps(v).encode('utf-8'))
+            producer.send('sentimentTopicSpring', predict)
 
     app.run(host="0.0.0.0", port=8083, debug=True)
