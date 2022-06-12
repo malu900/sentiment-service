@@ -51,10 +51,8 @@ def hello_world():  # put application's code here
 if __name__ == '__main__':
     while True:
         for message in consumer:
-            collection.insert_one({"sentiment": message.value.decode()})
             pred = predictSentiment(message.value.decode())
             predict = pred[0]["label"]
             collection.insert_one({"sentiment": predict})
-            # collection.insert_one({"sentiment": pred[0].label})
 
     app.run(host="0.0.0.0", port=8083, debug=True)
