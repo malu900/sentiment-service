@@ -17,16 +17,6 @@ db = cluster["sentiment"]
 collection = db["sentiment"]
 # PIPELINE
 sentiment_pipeline = pipeline("sentiment-analysis")
-# admin_client = admin.KafkaAdminClient(
-#     bootstrap_servers="kafka.kafka.svc.cluster.local:9092",
-#     client_id='test'
-# )
-# topic_list = []
-# topic_list.append(admin.NewTopic(name="sentimentTopicSpring", num_partitions=1, replication_factor=1))
-# admin_client.create_topics(new_topics=topic_list, validate_only=False)
-# data = ["I love you. I hate you."]
-# sentiment_pipeline(data)
-# KAFKA
 
 consumer = KafkaConsumer(
     'sentimentObjectPython',
